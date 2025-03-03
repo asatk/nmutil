@@ -10,21 +10,22 @@ class Solution():
 
     def __init__(self,
                  nstep: int,
-                 rank: int,
                  order: int,
+                 rank: int,
                  dim: int,
                  dt: float):
 
         self._nstep = nstep
-        self._rank = rank
         self._order = order
+        self._rank = rank
         self._dim = dim
+        self._dt = dt
 
         if nstep == 0:
-            self._s = np.zeros((DEFAULT_NSTEP, rank, order, dim))
+            self._s = np.zeros((DEFAULT_NSTEP, order, rank, dim))
             self._t = np.zeros(DEFAULT_NSTEP)
         else:
-            self._s = np.zeros((nstep, rank, order, dim))
+            self._s = np.zeros((nstep, order, rank, dim))
             self._t = np.zeros(nstep)
         self._i = 0
 
@@ -33,10 +34,10 @@ class Solution():
         return self._s[key]
 
     def __setitem__(self, key, value):
-        return self._s[key] = value
+        self._s[key] = value
 
 
-    def get_soln():
+    def get_soln(self):
         """
         Returns the entire solution with the step data.
         """

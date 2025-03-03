@@ -1,7 +1,7 @@
 import abc
 import numpy as np
 from . import DEFAULT_NSTEP, MAX_NSTEP
-form . import Solution
+from . import Solution
 
 class SolverBase(abc.ABC):
     """
@@ -11,8 +11,8 @@ class SolverBase(abc.ABC):
     def __init__(self,
                  funcs: list,
                  nstep: int,
-                 rank: int,
                  order: int,
+                 rank: int,
                  dim: int,
                  dt: float,
                  initc: dict,
@@ -22,31 +22,28 @@ class SolverBase(abc.ABC):
 
         self._fns = funcs
         self._nstep = min(nstep, MAX_NSTEP)
-        self._rank = rank
         self._order = order
+        self._rank = rank
         self._dim = dim
         self._dt = dt
         self._initc = initc
-        self._args = [[] * order] if fargs = None else fargs
+        self._args = [[] for _ in range(order)] if fargs is None else fargs
         self._callbacks = [] if callbacks is None else callbacks
-
+        
         if len(initc) != order:
-            print(f"Number of initial conditions does not match order "+\
-                  f"({order} != {len(initc)})")
-            return None
+            raise ValueError(f"Number of initial conditions does not match "+\
+                  f"order ({order} != {len(initc)})")
 
         if len(funcs) != order:
-            print(f"Order does not match number of functions "+\
+            raise ValueError(f"Order does not match number of functions "+\
                   f"({order} != {len(funcs)})")
-            return None
 
         if len(self._args) != order:
-            print(f"Order does not match number of function argument lists "+\
-                  f"({order} != {len(self._args)})")
-            return None
+            raise ValueError(f"Order does not match number of function "+\
+                  f"argument lists ({order} != {len(self._args)})")
 
-        self._soln = Solution(nstep, rank, order, dim, dt)
-        self._soln.step(initc)
+        self._soln = Solution(nstep, order, rank, dim, dt)
+        self._soln.step(initc[:,None,:])
 
 
     @abc.abstractmethod
@@ -230,6 +227,8 @@ class EulerCromer(ODESolverBase):
             f = self._fns[j]
             feval = f(s[i], time, *args[j])
             sol[j] = s[i,j] + dt * feval
+
+        print(sol.shape)
 
         s.step(sol)
 
