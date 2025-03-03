@@ -1,6 +1,6 @@
 import abc
 import numpy as np
-from . import DEFAULT_NSTEP, MAX_NSTEP
+from . import DEFAULT_NSTEP, MAX_NSTEP, MAX_ADAPTS
 from . import Solution
 
 class SolverBase(abc.ABC):
@@ -112,7 +112,7 @@ class RungeKutta4(ODESolverBase):
     Fourth-order Runge Kutta ODE Solver
     """
 
-    def step(self):
+    def _rk4_helper(self):
         s = self._soln
         i = s.ind()
         sol = np.copy(s[i])
@@ -151,8 +151,11 @@ class RungeKutta4(ODESolverBase):
             f = self._fns[j]
             feval = dt * f(x4, time + dt, *args[j])
             sol[j] += feval / 6
+        return sol
 
-        s.step(sol)
+    def step(self):
+        sol = self._rk4_helper()
+        self._soln.step(sol)
 
 
 class RungeKutta4Ada(RungeKutta4):
@@ -162,15 +165,40 @@ class RungeKutta4Ada(RungeKutta4):
 
     safe1: float=0.9
     safe2: float=4.0
+    err: float=1e-3
+    eps: float=np.spacing(1)
 
     def step(self):
+        s = self._soln
+        dt = self._dt
+        for _ in range(MAX_ADAPTS):
+            
+            # Long step
+            super().step()
+            sol1 = s[s.ind()]
+            s._i -= 1    # Rewind
+
+            # Short steps
+            s.set_dt(dt / 2)
+            super().step()
+            sol2 = super()._rk4_helper()
+            s._i -= 1    # Rewind
+
+            deltac = np.max(np.abs(sol1 - sol2))
+            deltai = self.err * np.mean((np.abs(sol1), np.abs(sol2)))
+
+            ratio = np.power(deltac / (deltai + self.eps), 1/5)
+
+            dt = np.clip(self.safe1 * dt * ratio,
+                         a_min=dt / self.safe2,
+                         a_max=dt * self.safe2)
+            s.set_dt(dt)
+
+            if ratio < 1:
+                break
+
+        print(dt)
         super().step()
-        sol1 = s[self._i]
-        self._i -= 1
-        self._dt /= 2
-        self._soln.set_dt(self._dt)
-        super().step()
-        sol2 = s[self._i]
 
 
 class RungeKutta2(ODESolverBase):
