@@ -120,41 +120,57 @@ class RungeKutta4(ODESolverBase):
         time = s.time()
         args = self._args
         
+        x1 = np.copy(s[i])
+        x2 = np.copy(s[i])
+        x3 = np.copy(s[i])
+        x4 = np.copy(s[i])
+
         # Stage 1
-        temp = np.copy(s[i])
         for j in range(self._order):
             f = self._fns[j]
-            feval = dt * f(temp, time, *args[j])
+            feval = dt * f(x1, time, *args[j])
             sol[j] += feval / 6
-            temp[j] += feval / 2
+            x2[j] += feval / 2
         
         # Stage 2
-        temp = np.copy(s[i])
         for j in range(self._order):
             f = self._fns[j]
-            feval = dt * f(temp, time + dt / 2, *args[j])
+            feval = dt * f(x2, time + dt / 2, *args[j])
             sol[j] += feval / 3
-            temp[j] += feval / 2
+            x3[j] += feval / 2
 
         # Stage 3
-        temp = np.copy(s[i])
         for j in range(self._order):
             f = self._fns[j]
-            feval = dt * f(temp, time + dt / 2, *args[j])
+            feval = dt * f(x3, time + dt / 2, *args[j])
             sol[j] += feval / 3
-            temp[j] += feval
+            x4[j] += feval
 
         # Stage 4
         for j in range(self._order):
             f = self._fns[j]
-            feval = dt * f(temp, time + dt, *args[j])
+            feval = dt * f(x4, time + dt, *args[j])
             sol[j] += feval / 6
 
         s.step(sol)
 
 
 class RungeKutta4Ada(RungeKutta4):
-    ...
+    """
+    Fourth-order Adaptive Runge Kutta ODE Solver
+    """
+
+    safe1: float=0.9
+    safe2: float=4.0
+
+    def step(self):
+        super().step()
+        sol1 = s[self._i]
+        self._i -= 1
+        self._dt /= 2
+        self._soln.set_dt(self._dt)
+        super().step()
+        sol2 = s[self._i]
 
 
 class RungeKutta2(ODESolverBase):
@@ -225,31 +241,6 @@ class EulerCromer(ODESolverBase):
     """
     Order-N Euler-Cromer method ODE solver
     """
-
-    def __init__(
-        self,
-        funcs,
-        nstep: int,
-        rank: int,
-        order: int,
-        dim: int,
-        dt: float,
-        initc: np.ndarray,
-        termc: list=None,
-        fargs: tuple=None,
-        callbacks: list=None):
-
-        super().__init__(
-                funcs,
-                nstep,
-                rank,
-                order,
-                dim,
-                dt,
-                initc,
-                termc,
-                fargs,
-                callbacks)
         
     def step(self):
         s = self._soln
@@ -272,31 +263,6 @@ class Euler(ODESolverBase):
     """
     Order-N Euler method ODE solver
     """
-
-    def __init__(
-        self,
-        funcs,
-        nstep: int,
-        rank: int,
-        order: int,
-        dim: int,
-        dt: float,
-        initc: np.ndarray,
-        termc: list=None,
-        fargs: tuple=None,
-        callbacks: list=None):
-
-        super().__init__(
-                funcs,
-                nstep,
-                rank,
-                order,
-                dim,
-                dt,
-                initc,
-                termc,
-                fargs,
-                callbacks)
         
     def step(self):
         s = self._soln
