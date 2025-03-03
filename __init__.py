@@ -1,5 +1,5 @@
 from . mathutil import cross2d, interp
-from . solvers import Euler, EulerCromer, RungeKutta2, Solution
+from . solvers import Euler, EulerCromer, RungeKutta2, RungeKutta4, Solution
 
 __all__ = [
     "cross2d",
@@ -7,5 +7,6 @@ __all__ = [
     "Euler",
     "EulerCromer",
     "RungeKutta2",
+    "RungeKutta4",
     "Solution"
 ]

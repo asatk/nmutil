@@ -27,6 +27,7 @@ class SolverBase(abc.ABC):
         self._dim = dim
         self._dt = dt
         self._initc = initc
+        self._termc = (lambda _: False) if termc is None else termc
         self._args = [[] for _ in range(order)] if fargs is None else fargs
         self._callbacks = [] if callbacks is None else callbacks
         
@@ -42,8 +43,7 @@ class SolverBase(abc.ABC):
             raise ValueError(f"Order does not match number of function "+\
                   f"argument lists ({order} != {len(self._args)})")
 
-        self._soln = Solution(nstep, order, rank, dim, dt)
-        self._soln.step(initc[:,None,:])
+        self._soln = Solution(nstep, order, rank, dim, dt, initc[:,None,...])
 
 
     @abc.abstractmethod
@@ -54,28 +54,21 @@ class SolverBase(abc.ABC):
         ...
 
 
-    @abc.abstractmethod
-    def _get_steps(self, i: int) -> np.ndarray:
-        """
-        Return the steps in the independent variable.
-        """
-        ...
-        
-
     def solve(self) -> tuple[np.ndarray, np.ndarray]:
         """
         Solve the differential equation.
         """
         fixed_steps = self._nstep > 0
-        nsteps = DEFAULT_NSTEP if fixed_steps else self._nstep - 1
+        nsteps = self._nstep if fixed_steps else DEFAULT_NSTEP
 
         while True:
-            for _ in range(nsteps):
-                data = self.step()
-                if self._termc(self._soln):
-                    return self._soln
+            for _ in range(nsteps - 1):
+                self.step()
+                soln = self._soln
+                if self._termc(soln):
+                    return soln
                 for c in self._callbacks:
-                    c(self._soln)
+                    c(soln)
             if fixed_steps:
                 break
             else:
@@ -114,12 +107,50 @@ class ODESolverBase(SolverBase, metaclass=abc.ABCMeta):
                          callbacks)
 
 
-    def _get_steps(self, i: int):
-        return self._dt * np.arange(i+1)
-
-
 class RungeKutta4(ODESolverBase):
-    ...
+    """
+    Fourth-order Runge Kutta ODE Solver
+    """
+
+    def step(self):
+        s = self._soln
+        i = s.ind()
+        sol = np.copy(s[i])
+        dt = self._dt
+        time = s.time()
+        args = self._args
+        
+        # Stage 1
+        temp = np.copy(s[i])
+        for j in range(self._order):
+            f = self._fns[j]
+            feval = dt * f(temp, time, *args[j])
+            sol[j] += feval / 6
+            temp[j] += feval / 2
+        
+        # Stage 2
+        temp = np.copy(s[i])
+        for j in range(self._order):
+            f = self._fns[j]
+            feval = dt * f(temp, time + dt / 2, *args[j])
+            sol[j] += feval / 3
+            temp[j] += feval / 2
+
+        # Stage 3
+        temp = np.copy(s[i])
+        for j in range(self._order):
+            f = self._fns[j]
+            feval = dt * f(temp, time + dt / 2, *args[j])
+            sol[j] += feval / 3
+            temp[j] += feval
+
+        # Stage 4
+        for j in range(self._order):
+            f = self._fns[j]
+            feval = dt * f(temp, time + dt, *args[j])
+            sol[j] += feval / 6
+
+        s.step(sol)
 
 
 class RungeKutta4Ada(RungeKutta4):
@@ -161,9 +192,11 @@ class RungeKutta2(ODESolverBase):
             self._coefs = coefs
     
     
-    def step(self, i: int):
+    def step(self):
         s = self._soln
-        sol = np.empty_like(s[i])
+        i = s.ind()
+        sol = np.copy(s[i])
+        temp = np.copy(s[i])
         dt = self._dt
         time = s.time()
         args = self._args
@@ -173,15 +206,17 @@ class RungeKutta2(ODESolverBase):
         a = self._coefs[2]
         b = self._coefs[3]
 
+        # Stage 1
         for j in range(self._order):
             f = self._fns[j]
-            feval = dt * self._fns[j](s[i], time, *args[j])
-            
-            temp = s[i,j] + b * feval
-            t1 = w1 * feval
-            t2 = w2 * dt * f(temp, time + a * dt, *self._args)
-
-            sol[j] = s[i,j] + t1 + t2
+            feval = dt * f(s[i], time, *args[j])
+            sol[j] += w1 * feval
+            temp[j] += b * feval
+        
+        # Stage 2
+        for j in range(self._order):
+            f = self._fns[j]
+            sol[j] += w2 * dt * f(temp, time + a * dt, *self._args[j])
 
         s.step(sol)
 
@@ -216,19 +251,19 @@ class EulerCromer(ODESolverBase):
                 fargs,
                 callbacks)
         
-    def step(self, i: int):
+    def step(self):
         s = self._soln
+        i = s.ind()
         sol = np.empty_like(s[i])
         dt = self._dt
         time = s.time()
         args = self._args
 
-        for j in reversed(range(self._order)):
+        sol[-1] = s[i, -1] + dt * self._fns[-1](s[i], time, *args[-1])
+        for j in reversed(range(self._order - 1)):
             f = self._fns[j]
-            feval = f(s[i], time, *args[j])
-            sol[j] = s[i,j] + dt * feval
-
-        print(sol.shape)
+            feval = dt * f(sol, time + dt, *args[j])
+            sol[j] = s[i,j] + feval
 
         s.step(sol)
 
@@ -263,15 +298,17 @@ class Euler(ODESolverBase):
                 fargs,
                 callbacks)
         
-    def step(self, i: int):
+    def step(self):
         s = self._soln
+        i = s.ind()
         sol = np.empty_like(s[i])
         dt = self._dt
+        time = s.time()
         args = self._args
 
         for j in range(self._order):
             f = self._fns[j]
-            feval = f(s[i], time, *args[j])
-            sol[j] = s[i,j] + dt * feval
+            feval = dt * f(s[i], time, *args[j])
+            sol[j] = s[i,j] + feval
 
         s.step(sol)

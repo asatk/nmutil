@@ -13,7 +13,7 @@ assert(isinstance(MAX_NSTEP, int))
 assert(MAX_NSTEP % DEFAULT_NSTEP == 0)
 
 from .solution import Solution
-from .solver import Euler, EulerCromer, RungeKutta2
+from .solver import Euler, EulerCromer, RungeKutta2, RungeKutta4
 
 ODEFunction = Callable[[np.ndarray, np.ndarray, ...], ...]
 Callback = Callable[[Solution, ...], ...]
@@ -25,6 +25,7 @@ __all__ = [
     "Euler",
     "EulerCromer",
     "RungeKutta2",
+    "RungeKutta4",
     "Solution",
     "Callback",
     "TerminatingCondition"

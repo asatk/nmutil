@@ -13,7 +13,8 @@ class Solution():
                  order: int,
                  rank: int,
                  dim: int,
-                 dt: float):
+                 dt: float,
+                 initc: np.ndarray):
 
         self._nstep = nstep
         self._order = order
@@ -28,6 +29,7 @@ class Solution():
             self._s = np.zeros((nstep, order, rank, dim))
             self._t = np.zeros(nstep)
         self._i = 0
+        self._s[0] = initc
 
 
     def __getitem__(self, key):
@@ -41,7 +43,7 @@ class Solution():
         """
         Returns the entire solution with the step data.
         """
-        return self._s, self._t
+        return self._s[:self._i+1], self._t[:self._i+1]
 
 
     def ind(self):
@@ -81,16 +83,20 @@ class Solution():
             return False
         
         new_shape = [new_size]
-        if len(shape) > 1:
-            new_shape.extend(shape[1:])
+        new_shape.extend(shape[1:])
 
         new_state = np.zeros(new_shape)
         new_state[:shape[0]] = self._s
         self._s = new_state
+
+        new_times = np.zeros(new_size)
+        new_times[:shape[0]] = self._t
+        self._t = new_times
+
         return True
 
 
     def step(self, data):
+        self._i += 1
         self._s[self._i] = data
         self._t[self._i] = self._t[self._i - 1] + self._dt
-        self._i += 1
