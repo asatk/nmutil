@@ -17,7 +17,7 @@ class SolverBase(abc.ABC):
                  dt: float,
                  initc: dict,
                  termc=None,
-                 fargs: tuple=None,
+                 fargs: list[list]=None,
                  callbacks: list=None):
 
         self._fns = funcs
@@ -27,15 +27,25 @@ class SolverBase(abc.ABC):
         self._dim = dim
         self._dt = dt
         self._initc = initc
-        self._args = () if fargs = None else fargs
+        self._args = [[] * order] if fargs = None else fargs
         self._callbacks = [] if callbacks is None else callbacks
 
         if len(initc) != order:
-            print(f"Order does not match number of initial conditions "+\
+            print(f"Number of initial conditions does not match order "+\
                   f"({order} != {len(initc)})")
             return None
 
-        self._soln = Solution(nstep, rank, order, dim)
+        if len(funcs) != order:
+            print(f"Order does not match number of functions "+\
+                  f"({order} != {len(funcs)})")
+            return None
+
+        if len(self._args) != order:
+            print(f"Order does not match number of function argument lists "+\
+                  f"({order} != {len(self._args)})")
+            return None
+
+        self._soln = Solution(nstep, rank, order, dim, dt)
         self._soln.step(initc)
 
 
@@ -72,7 +82,7 @@ class SolverBase(abc.ABC):
             if fixed_steps:
                 break
             else:
-                if not self._soln.grow_soln():
+                if not self._soln.grow():
                     break
 
         return self._soln
@@ -156,20 +166,27 @@ class RungeKutta2(ODESolverBase):
     
     def step(self, i: int):
         s = self._soln
+        sol = np.empty_like(s[i])
         dt = self._dt
+        time = s.time()
+        args = self._args
         
         w1 = self._coefs[0]
         w2 = self._coefs[1]
         a = self._coefs[2]
         b = self._coefs[3]
-        
-        feval = dt * self._g(s, *self._args)
-        temp = s[i,0] + b * feval
 
-        t1 = w1 * feval
-        t2 = w2 * dt * self._g(temp, *self._args)
+        for j in range(self._order):
+            f = self._fns[j]
+            feval = dt * self._fns[j](s[i], time, *args[j])
+            
+            temp = s[i,j] + b * feval
+            t1 = w1 * feval
+            t2 = w2 * dt * f(temp, time + a * dt, *self._args)
 
-        s[i+1,0] = s[i,0] + t1 + t2
+            sol[j] = s[i,j] + t1 + t2
+
+        s.step(sol)
 
 
 class EulerCromer(ODESolverBase):
@@ -204,11 +221,17 @@ class EulerCromer(ODESolverBase):
         
     def step(self, i: int):
         s = self._soln
+        sol = np.empty_like(s[i])
         dt = self._dt
+        time = s.time()
+        args = self._args
 
-        s[i+1,-1] = s[i,-1] + dt * self._g(s, *self._args)
-        for j in reversed(range(self._order - 1)):
-            s[i+1,j] = s[i,j] + dt * s[i+1,j+1]
+        for j in reversed(range(self._order)):
+            f = self._fns[j]
+            feval = f(s[i], time, *args[j])
+            sol[j] = s[i,j] + dt * feval
+
+        s.step(sol)
 
 
 class Euler(ODESolverBase):
@@ -243,11 +266,13 @@ class Euler(ODESolverBase):
         
     def step(self, i: int):
         s = self._soln
+        sol = np.empty_like(s[i])
         dt = self._dt
+        args = self._args
 
-        fevals = np.apply()
+        for j in range(self._order):
+            f = self._fns[j]
+            feval = f(s[i], time, *args[j])
+            sol[j] = s[i,j] + dt * feval
 
-        s[i+1] = s[i] + dt * fevals
-
-        s[i+1,-1] = s[i,-1] + dt * self._g(s, *self._args)
-        s[i+1,:-1] = s[i,:-1] + dt * s[i,1:]
+        s.step(sol)

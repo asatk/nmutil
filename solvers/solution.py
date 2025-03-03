@@ -2,30 +2,6 @@ import numpy as np
 
 from . import DEFAULT_NSTEP, MAX_NSTEP
 
-class Rank():
-
-    def __init__(self, data: np.ndarray):
-        self._data = data
-
-    def __getitem__(self, key):
-        return self._data[:, x, :, :]
-
-class Order():
-
-    def __init__(self, data: np.ndarray):
-        self._data = data
-
-    def __getitem__(self, key):
-        return self._data[:, :, x, :]
-
-class Dimension():
-    
-    def __init__(self, data: np.ndarray):
-        self._data = data
-
-    def __getitem__(self, key):
-        return self._data[..., x]
-
 
 class Solution():
     """
@@ -52,9 +28,12 @@ class Solution():
             self._t = np.zeros(nstep)
         self._i = 0
 
-        self.rank = Rank(self._s)
-        self.order = Order(self._s)
-        self.dim = Dimension(self._s)
+
+    def __getitem__(self, key):
+        return self._s[key]
+
+    def __setitem__(self, key, value):
+        return self._s[key] = value
 
 
     def get_soln():
@@ -64,18 +43,18 @@ class Solution():
         return self._s, self._t
 
 
-    def __getitem__(self, key):
-        return self._s[key]
-
-    def __setitem__(self, key, value):
-        return self._s[key] = value
-
-
     def ind(self):
         """
         Returns the current step the solution is on.
         """
         return self._i
+
+
+    def time(self):
+        """
+        Returns the latest value of the dependent variable (time).
+        """
+        return self._t[self._i]
 
 
     def set_dim(self, data, ind: int|list[int]=None):
@@ -91,7 +70,7 @@ class Solution():
         self._dt = dt
 
 
-    def grow_soln(self) -> bool:
+    def grow(self) -> bool:
         """
         Increase the size of the solution array by DEFAULT_NSTEP more steps
         """
@@ -112,5 +91,5 @@ class Solution():
 
     def step(self, data):
         self._s[self._i] = data
-        self._t[self._i] = self._t[self._i - 1] += self._dt
+        self._t[self._i] = self._t[self._i - 1] + self._dt
         self._i += 1
