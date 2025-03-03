@@ -165,7 +165,7 @@ class RungeKutta4Ada(RungeKutta4):
 
     safe1: float=0.9
     safe2: float=4.0
-    err: float=1e-3
+    err: float=1e-2
     eps: float=np.spacing(1)
 
     def step(self):
@@ -179,6 +179,7 @@ class RungeKutta4Ada(RungeKutta4):
             s._i -= 1    # Rewind
 
             # Short steps
+            self._dt = dt / 2
             s.set_dt(dt / 2)
             super().step()
             sol2 = super()._rk4_helper()
@@ -187,17 +188,17 @@ class RungeKutta4Ada(RungeKutta4):
             deltac = np.max(np.abs(sol1 - sol2))
             deltai = self.err * np.mean((np.abs(sol1), np.abs(sol2)))
 
-            ratio = np.power(deltac / (deltai + self.eps), 1/5)
+            ratio = np.power((deltai + self.eps) / deltac, 1/5)
 
             dt = np.clip(self.safe1 * dt * ratio,
                          a_min=dt / self.safe2,
                          a_max=dt * self.safe2)
+            self._dt = dt
             s.set_dt(dt)
 
             if ratio < 1:
                 break
 
-        print(dt)
         super().step()
 
 
