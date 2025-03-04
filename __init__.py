@@ -1,11 +1,11 @@
+from . import linear
 from . import math
+from . import ode
 from . import util
-from .solvers import ode
-from .solvers import linear
 
 __all__ = [
-    "math",
-    "util",
-    "ode",
     "linear"
+    "math",
+    "ode",
+    "util",
 ]
