@@ -1,14 +1,11 @@
 from . import math
 from . import util
-from .solvers import Euler, EulerCromer, RungeKutta2, RungeKutta4, RungeKutta4Ada, Solution
+from .solvers import ode
+from .solvers import linear
 
 __all__ = [
     "math",
     "util",
-    "Euler",
-    "EulerCromer",
-    "RungeKutta2",
-    "RungeKutta4",
-    "RungeKutta4Ada",
-    "Solution"
+    "ode",
+    "linear"
 ]
