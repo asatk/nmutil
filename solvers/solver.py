@@ -12,7 +12,6 @@ class SolverBase(abc.ABC):
                  funcs: list,
                  nstep: int,
                  order: int,
-                 rank: int,
                  dim: int,
                  dt: float,
                  initc: dict,
@@ -23,7 +22,6 @@ class SolverBase(abc.ABC):
         self._fns = funcs
         self._nstep = min(nstep, MAX_NSTEP)
         self._order = order
-        self._rank = rank
         self._dim = dim
         self._dt = dt
         self._initc = initc
@@ -43,7 +41,7 @@ class SolverBase(abc.ABC):
             raise ValueError(f"Order does not match number of function "+\
                   f"argument lists ({order} != {len(self._args)})")
 
-        self._soln = Solution(nstep, order, rank, dim, dt, initc[:,None,...])
+        self._soln = Solution(nstep, order, dim, dt, initc)
 
 
     @abc.abstractmethod
@@ -86,7 +84,6 @@ class ODESolverBase(SolverBase, metaclass=abc.ABCMeta):
         self,
         funcs,
         nstep: int,
-        rank: int,
         order: int,
         dim: int,
         dt: float,
@@ -97,7 +94,6 @@ class ODESolverBase(SolverBase, metaclass=abc.ABCMeta):
 
         super().__init__(funcs,
                          nstep,
-                         rank,
                          order,
                          dim,
                          dt,
@@ -210,7 +206,6 @@ class RungeKutta2(ODESolverBase):
         self,
         funcs,
         nstep: int,
-        rank: int,
         order: int,
         dim: int,
         dt: float,
@@ -222,7 +217,6 @@ class RungeKutta2(ODESolverBase):
 
         super().__init__(funcs,
                          nstep,
-                         rank,
                          order,
                          dim,
                          dt,

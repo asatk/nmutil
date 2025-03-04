@@ -11,22 +11,20 @@ class Solution():
     def __init__(self,
                  nstep: int,
                  order: int,
-                 rank: int,
                  dim: int,
                  dt: float,
                  initc: np.ndarray):
 
         self._nstep = nstep
         self._order = order
-        self._rank = rank
         self._dim = dim
         self._dt = dt
 
         if nstep == 0:
-            self._s = np.zeros((DEFAULT_NSTEP, order, rank, dim))
+            self._s = np.zeros((DEFAULT_NSTEP, order, dim))
             self._t = np.zeros(DEFAULT_NSTEP)
         else:
-            self._s = np.zeros((nstep, order, rank, dim))
+            self._s = np.zeros((nstep, order, dim))
             self._t = np.zeros(nstep)
         self._i = 0
         self._s[0] = initc
@@ -58,12 +56,6 @@ class Solution():
         Returns the latest value of the dependent variable (time).
         """
         return self._t[self._i]
-
-
-    def set_dim(self, data, ind: int|list[int]=None):
-        if ind is None:
-            ind = self._i
-        self._s[ind] = data
 
 
     def set_dt(self, dt: float):
