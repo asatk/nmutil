@@ -5,11 +5,12 @@ def parse_pi_str(text: str, default: str="2*pi"):
     if text == "" or text is None:
         text = default
         print(f"returning default value of {default}")
-    m = re.match(r"^(\d+(\.\d+)?)(\s*\*\s*pi)?$", text)
+    pattern = r"^(-?\d+(\.\d+)?)(\s*\*\s*pi)?$"
+    m = re.match(pattern, text)
     if m is None:
         print(f"Invalid argument provided for -v/--v0: '{default}'. Assuming default value '{default}'")
         text = default
-        m = re.match(r"^(\d+(\.\d+)?)(\s*\*\s*pi)?$", text)
+        m = re.match(pattern, text)
 
     if m.lastindex != 3:
         return float(m[1])

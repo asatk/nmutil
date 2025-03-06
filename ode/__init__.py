@@ -4,7 +4,7 @@ from typing import Callable
 #~*~# GLOBAL VARIABLES #~*~#
 DEFAULT_NSTEP: int = 1000   # Default number of steps for solution. Sets initial size of solution.
 MAX_NSTEP: int = 100_000    # Maximum number of steps a solutions can take; prevents memory crash.
-MAX_ADAPTS: int = 10        # Maximum number of attempts to find an optimal timestep in adaptive methods
+MAX_ADAPTS: int = 100       # Maximum number of attempts to find an optimal timestep in adaptive methods
 
 # DEFAULT_NSTEP must be an integer
 assert(isinstance(DEFAULT_NSTEP, int))

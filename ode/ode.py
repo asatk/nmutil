@@ -16,7 +16,7 @@ class ODESolverBase(metaclass=abc.ABCMeta):
                  dt: float,
                  initc: list,
                  termc=None,
-                 fargs: list[list]=None,
+                 fargs: list=None,
                  callbacks: list=None):
 
         self._fns = funcs

@@ -16,7 +16,7 @@ class RungeKutta4(ODESolverBase):
         dt = self._dt
         time = s.time()
         args = self._args
-        
+
         x1 = np.copy(s[i])
         x2 = np.copy(s[i])
         x3 = np.copy(s[i])
@@ -60,33 +60,59 @@ class RungeKutta4Ada(RungeKutta4):
     Fourth-order Adaptive Runge Kutta ODE Solver
     """
 
-    safe1: float=0.9
-    safe2: float=4.0
-    err: float=1e-2
+    def __init__(self,
+                 funcs,
+                 nstep: int,
+                 order: int,
+                 dim: int,
+                 dt: float,
+                 initc,
+                 safe1: float=0.9,
+                 safe2: float=4.0,
+                 err: float=1e-3,
+                 termc=None,
+                 fargs: list=None,
+                 callbacks: list=None):
+        super().__init__(funcs,
+                         nstep,
+                         order,
+                         dim,
+                         dt,
+                         initc,
+                         termc=termc,
+                         fargs=fargs,
+                         callbacks=callbacks)
+        self._safe1 = safe1
+        self._safe2 = safe2
+        self._err = err
+
     eps: float=np.spacing(1)
 
     def step(self):
+        safe1 = self._safe1
+        safe2 = self._safe2
+        err = self._err
         s = self._soln
         dt = self._dt
         for _ in range(MAX_ADAPTS):
             
             # Long step
-            sol1 = super()._rk4_helper()
+            x1 = super()._rk4_helper()[0]
 
             # Short steps
             self._dt = dt / 2
             s.set_dt(dt / 2)
             super().step()
-            sol2 = super()._rk4_helper()
+            x2 = super()._rk4_helper()[0]
             s._i -= 1    # Rewind
 
-            deltac = np.abs(sol1 - sol2)
-            deltai = self.err * (np.abs(sol1) + np.abs(sol2)) / 2 + self.eps
+            deltac = np.abs(x1 - x2)
+            deltai = err * (np.abs(x1) + np.abs(x2)) / 2 + self.eps
             ratio = np.max(deltac / deltai)
 
-            dt = np.clip(self.safe1 * dt * ratio**(-0.2),
-                         a_min=dt / self.safe2,
-                         a_max=dt * self.safe2)
+            dt = np.clip(safe1 * dt * ratio**(-0.2),
+                         a_min=dt / safe2,
+                         a_max=dt * safe2)
             self._dt = dt
             s.set_dt(dt)
 
