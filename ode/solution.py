@@ -36,6 +36,9 @@ class Solution():
     def __setitem__(self, key, value):
         self._s[key] = value
 
+    def __delete__(self):
+        del self._s
+
 
     def get_soln(self):
         """

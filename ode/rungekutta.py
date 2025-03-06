@@ -71,9 +71,7 @@ class RungeKutta4Ada(RungeKutta4):
         for _ in range(MAX_ADAPTS):
             
             # Long step
-            super().step()
-            sol1 = s[s.ind()]
-            s._i -= 1    # Rewind
+            sol1 = super()._rk4_helper()
 
             # Short steps
             self._dt = dt / 2
@@ -82,12 +80,11 @@ class RungeKutta4Ada(RungeKutta4):
             sol2 = super()._rk4_helper()
             s._i -= 1    # Rewind
 
-            deltac = np.max(np.abs(sol1 - sol2))
-            deltai = self.err * np.mean((np.abs(sol1), np.abs(sol2)))
+            deltac = np.abs(sol1 - sol2)
+            deltai = self.err * (np.abs(sol1) + np.abs(sol2)) / 2 + self.eps
+            ratio = np.max(deltac / deltai)
 
-            ratio = np.power((deltai + self.eps) / deltac, 1/5)
-
-            dt = np.clip(self.safe1 * dt * ratio,
+            dt = np.clip(self.safe1 * dt * ratio**(-0.2),
                          a_min=dt / self.safe2,
                          a_max=dt * self.safe2)
             self._dt = dt

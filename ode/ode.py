@@ -43,6 +43,10 @@ class ODESolverBase(metaclass=abc.ABCMeta):
 
         self._soln = Solution(nstep, order, dim, dt, initc)
 
+    
+    def __delete__(self):
+        del self._soln
+    
 
     @abc.abstractmethod
     def step(self) -> np.ndarray:

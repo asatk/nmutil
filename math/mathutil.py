@@ -13,14 +13,30 @@ import numpy as np
 
 def interp(t: np.ndarray, x: np.ndarray, y: np.ndarray):
     """
-    Compute a 3-point polynomial fit of the data `x` and `y` at sample points
-    in the domain `t`
+    Compute the Lagrange polynomial interpolation from data `x` and `y` for
+    sample points in the domain `t`
     """
 
-    t1 = y[0] * (t - x[1]) * (t - x[2]) / (x[0] - x[1]) / (x[0] - x[2])
-    t2 = y[1] * (t - x[0]) * (t - x[2]) / (x[1] - x[0]) / (x[1] - x[2])
-    t3 = y[2] * (t - x[0]) * (t - x[1]) / (x[2] - x[0]) / (x[2] - x[1])
-    return t1 + t2 + t3
+    # Accumulate the sum over all xi
+    term = 0.0
+    for i in range(len(x)):
+        xi = x[i]
+        yi = y[i]
+
+        # Accumulate the product for each xj
+        factor = 1.0
+        for j in range(len(x)):
+            if j == i:
+                continue
+            xj = x[j]
+            factor *= (t - xj) / (xi - xj)
+        term += factor * yi
+    return term
+
 
 def cross2d(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """
+    Get the magnitude of the cross product vector normal to the plane of the
+    two co-planar vectors.
+    """
     return x[..., 0] * y[..., 1] - x[..., 1] * y[..., 0]
