@@ -17,8 +17,8 @@ class Solution():
 class LinearSolver():
     def __init__(order: int,
                  dim: int,
-                 tol: float=1e-5,
-                 initc):
+                 initc,
+                 tol: float=1e-5):
         self._fns = funcs
         self._order = order
         self._dim = dim
@@ -41,8 +41,8 @@ class Newton(LinearSolver):
                  inv_jac,
                  order: int,
                  dim: int,
-                 tol: float,
-                 initc):
+                 initc,
+                 tol: float=1e-5):
         super().__init__(order,
                          dim,
                          tol,
@@ -53,7 +53,7 @@ class Newton(LinearSolver):
         s = self._soln
         fx = self.func(s)
         jacx = self._inv_jac(s)
-        dx = 
+#        dx = 
         s.step()
 
 
