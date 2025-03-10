@@ -1,11 +1,11 @@
-from . import linear
 from . import math
 from . import ode
+from . import root
 from . import util
 
 __all__ = [
-    "linear"
     "math",
     "ode",
+    "root"
     "util",
 ]
