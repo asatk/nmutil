@@ -1,7 +1,7 @@
 import abc
 import numpy as np
 from . import DEFAULT_NSTEP, MAX_NSTEP
-from ..solvers import SolverBase, SolutionBase
+from ..solver import SolverBase, SolutionBase
 
 
 class ODESolution(SolutionBase):

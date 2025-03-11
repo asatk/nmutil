@@ -1,7 +1,6 @@
 import abc
 import numpy as np
 from . import DEFAULT_NSTEP, MAX_NSTEP, MAX_ADAPTS
-from .solution import Solution
 from .ode import ODESolverBase
 
 class RungeKutta4(ODESolverBase):

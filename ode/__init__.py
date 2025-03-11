@@ -13,14 +13,13 @@ assert(isinstance(MAX_NSTEP, int))
 # MAX_NSTEP must be an integer multiple of DEFAULT_NSTEP
 assert(MAX_NSTEP % DEFAULT_NSTEP == 0)
 
-from .solution import Solution
-from .ode import ODESolverBase
+from .ode import ODESolverBase, ODESolution
 from .euler import Euler, EulerCromer
 from .rungekutta import RungeKutta2, RungeKutta4, RungeKutta4Ada
 
 ODEFunction = Callable[[np.ndarray, np.ndarray, ...], ...]
-Callback = Callable[[Solution, ...], ...]
-TerminatingCondition = Callable[[Solution, ...], bool]
+Callback = Callable[[ODESolution, ...], ...]
+TerminatingCondition = Callable[[ODESolution, ...], bool]
 
 __all__ = [
     "DEFAULT_NSTEP",
@@ -30,7 +29,8 @@ __all__ = [
     "RungeKutta2",
     "RungeKutta4",
     "RungeKutta4Ada",
-    "Solution",
+    "ODESolverBase",
+    "ODESolution",
     "Callback",
     "TerminatingCondition"
 ]

@@ -1,5 +1,8 @@
 from .newton import NewtonRaphson
+from .root import RootFinderBase, RootSolution
 
 __all__ = [
-    "NewtonRaphson"
+    "NewtonRaphson",
+    "RootFinderBase",
+    "RootSolution"
 ]

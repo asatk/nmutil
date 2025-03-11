@@ -1,13 +1,14 @@
 import numpy as np
 
-from . import RootFinder, RootSolution
+from .root import RootFinderBase, RootSolution
 
-class NewtonRaphson(RootFinder):
+class NewtonRaphson(RootFinderBase):
     """
     Implements the Newton-Raphson method for finding roots.
     """
 
-    def __init__(funcs,
+    def __init__(self,
+                 funcs,
                  inv_jac,
                  initc,
                  tol: float=1e-5,
@@ -21,13 +22,14 @@ class NewtonRaphson(RootFinder):
                          fargs=fargs,
                          callbacks=callbacks)
         self._inv_jac = inv_jac
-        self._s = RootSolution(initc)
+        self._soln = RootSolution(initc)
 
 
     def step(self):
-        s = self._s
-        x = self._s.curr()
-        fx = self.func(x)
+        s = self._soln
+        x = self._soln.curr()
+        f = self._fns[0]
+        fx = f(x)
         invjacx = self._inv_jac(x)
-        dx = - np.squeeze(np.matmul(fx, invjacx))
+        dx = - np.squeeze(np.matmul([fx], [invjacx]))
         s.step(x + dx)

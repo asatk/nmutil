@@ -1,12 +1,16 @@
+import numpy as np
 from numpy import linalg as la
 
-from ..solver import SolverBase
+from ..solver import SolverBase, SolutionBase
 
-root_tol_check(s: RootSolution, tol: float=1e-3):
-    return la.norm(s.prev() - s.curr()) < tol
+class RootSolution: ...
 
 
-RootSolution(SolutionBase):
+def root_tol_check(s: RootSolution, tol: float=1e-3):
+    return la.norm(s.prev() - s.curr()) / la.norm(s.curr()) < tol
+
+
+class RootSolution(SolutionBase):
     """
     Class encapsulating the necessary information for a root-finder.
     """
@@ -37,10 +41,11 @@ RootSolution(SolutionBase):
         pass
 
 
-RootFinder(SolverBase):
+class RootFinderBase(SolverBase):
     """
     Abstract base class for root finding methods.
     """
+
     def __init__(self,
                  funcs: list,
                  initc: list,
@@ -48,12 +53,15 @@ RootFinder(SolverBase):
                  termc=None,
                  fargs: list=None,
                  callbacks: list=None):
-        termc = lambda s: root_tol_check(s, tol) | termc(s)
+        if termc is None:
+            termc_ = lambda s: root_tol_check(s, tol)
+        else:
+            termc_ = lambda s: (root_tol_check(s, tol) | termc(s))
         super().__init__(
                 funcs,
                 0,
                 initc,
-                termc=termc,
-                fargs,
-                callbacks)
+                termc=termc_,
+                fargs=fargs,
+                callbacks=callbacks)
         self._tol = tol
