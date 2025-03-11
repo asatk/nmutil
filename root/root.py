@@ -56,7 +56,8 @@ class RootFinderBase(SolverBase):
         if termc is None:
             termc_ = lambda s: root_tol_check(s, tol)
         else:
-            termc_ = lambda s: (root_tol_check(s, tol) | termc(s))
+            termc_ = termc
+
         super().__init__(
                 funcs,
                 0,
