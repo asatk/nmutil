@@ -18,12 +18,12 @@ class NumpyFFT(FFT):
             out=None) -> np.ndarray:
         
         if isign == 1:
-            if self._isreal:
+            if self._real:
                 ft = fft.rfft(data, n, axis, norm, out)
             else:
                 ft = fft.fft(data, n, axis, norm, out)
         else:
-            if self._isreal:
+            if self._real:
                 ft = fft.irfft(data, n, axis, norm, out)
             else:
                 ft = fft.ifft(data, n, axis, norm, out)
