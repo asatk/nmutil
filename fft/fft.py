@@ -59,7 +59,7 @@ class FFT(metaclass=abc.ABCMeta):
         if self._ft is None and data is None:
             raise ValueError("Argument `data` must be provided if no data "+\
                     "have been transformed yet.")
-        elif self._ft is None and data is not None:
+        elif data is not None:
             ft = self.fft(data)
         else:
             ft = self._ft
