@@ -1,6 +1,17 @@
 import abc
 import numpy as np
-from typing import Literal
+
+
+def hamming_window(x: np.ndarray):
+    """
+    Apply a Hamming Window to the time-series data to reduce the effect of
+    leakage in a Discrete Fourier Transform.
+    """
+    n = x.shape[0]
+    i = np.arange(n)
+    windowed = x.T * np.sin(np.pi * i / n)**2
+    return windowed.T
+
 
 class FFT(metaclass=abc.ABCMeta):
 
@@ -87,10 +98,3 @@ class FFT(metaclass=abc.ABCMeta):
             return np.abs(freqs[:n//2+1])
         else:
             return freqs
-        
-        
-    def period(self):
-        """
-        Periods sampled by FFT
-        """
-
